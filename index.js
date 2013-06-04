@@ -19,14 +19,28 @@ I18nPlugin.prototype.apply = function(compiler) {
 		compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
 	});
 	compiler.parser.plugin("call " + this.functionName, function(expr) {
-		if(expr.arguments.length != 1) return;
-		var param = this.evaluateExpression(expr.arguments[0]);
-		if(!param.isString()) return;
-		param = param.string;
-		var result = localization ? localization[param] : param;
+		var param, defaultValue;
+		switch(expr.arguments.length) {
+		case 2:
+			param = this.evaluateExpression(expr.arguments[1]);
+			if(!param.isString()) return;
+			param = param.string;
+			defaultValue = this.evaluateExpression(expr.arguments[0]);
+			if(!defaultValue.isString()) return;
+			defaultValue = defaultValue.string;
+			break;
+		case 1:
+			param = this.evaluateExpression(expr.arguments[0]);
+			if(!param.isString()) return;
+			defaultValue = param = param.string;
+			break;
+		default:
+			return;
+		}
+		var result = localization ? localization[param] : defaultValue;
 		if(typeof result == "undefined") {
-			this.state.module.errors.push(new MissingLocalizationError(this.state.module, param));
-			result = param;
+			this.state.module.warnings.push(new MissingLocalizationError(this.state.module, param));
+			result = defaultValue;
 		}
 		var dep = new ConstDependency(JSON.stringify(result), expr.range);
 		dep.loc = expr.loc;
