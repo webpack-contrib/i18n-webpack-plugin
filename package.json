@@ -1,10 +1,10 @@
 {
 	"name": "i18n-webpack-plugin",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"author": "Tobias Koppers @sokra",
 	"description": "Embed localization into your bundle",
 	"peerDependencies": {
-		"webpack": ">=0.10 <0.12"
+		"webpack": ">=0.10 <2"
 	},
 	"licenses": [
 		{
