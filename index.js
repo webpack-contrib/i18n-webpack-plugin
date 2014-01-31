@@ -39,7 +39,13 @@ I18nPlugin.prototype.apply = function(compiler) {
 		}
 		var result = localization ? localization[param] : defaultValue;
 		if(typeof result == "undefined") {
-			this.state.module.warnings.push(new MissingLocalizationError(this.state.module, param));
+			var warning = this.state.module[__dirname];
+			if(!warning) {
+				warning = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
+				this.state.module.warnings.push(warning);
+			} else if(warning.requests.indexOf(param) < 0) {
+				warning.add(param, defaultValue);
+			}
 			result = defaultValue;
 		}
 		var dep = new ConstDependency(JSON.stringify(result), expr.range);
