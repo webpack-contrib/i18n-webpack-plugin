@@ -6,14 +6,16 @@ var ConstDependency = require("webpack/lib/dependencies/ConstDependency");
 var NullFactory = require("webpack/lib/NullFactory");
 var MissingLocalizationError = require("./MissingLocalizationError");
 
-function I18nPlugin(localization, functionName) {
+function I18nPlugin(localization, functionName, failOnMissing) {
 	this.localization = localization || null;
 	this.functionName = functionName || "__";
+	this.failOnMissing = failOnMissing || false;
 }
 module.exports = I18nPlugin;
 
 I18nPlugin.prototype.apply = function(compiler) {
-	var localization = this.localization;
+	var localization = this.localization,
+		failOnMissing = this.failOnMissing;
 	compiler.plugin("compilation", function(compilation, params) {
 		compilation.dependencyFactories.set(ConstDependency, new NullFactory());
 		compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
@@ -39,12 +41,16 @@ I18nPlugin.prototype.apply = function(compiler) {
 		}
 		var result = localization ? localization[param] : defaultValue;
 		if(typeof result == "undefined") {
-			var warning = this.state.module[__dirname];
-			if(!warning) {
-				warning = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
-				this.state.module.warnings.push(warning);
-			} else if(warning.requests.indexOf(param) < 0) {
-				warning.add(param, defaultValue);
+			var error = this.state.module[__dirname];
+			if(!error) {
+				error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
+				if (failOnMissing) {
+					this.state.module.errors.push(error);
+				} else {
+					this.state.module.warnings.push(error);
+				}
+			} else if(error.requests.indexOf(param) < 0) {
+				error.add(param, defaultValue);
 			}
 			result = defaultValue;
 		}
