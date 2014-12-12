@@ -6,8 +6,16 @@ var ConstDependency = require("webpack/lib/dependencies/ConstDependency");
 var NullFactory = require("webpack/lib/NullFactory");
 var MissingLocalizationError = require("./MissingLocalizationError");
 
+/**
+ *
+ * @param {object|function}	localization
+ * @param {string}			functionName
+ * @param {boolean}			failOnMissing
+ * @constructor
+ */
 function I18nPlugin(localization, functionName, failOnMissing) {
-	this.localization = localization || null;
+	this.localization = localization? ('function' === typeof localization? localization: makeLocalizFunction(localization))
+									: null;
 	this.functionName = functionName || "__";
 	this.failOnMissing = failOnMissing || false;
 }
@@ -39,7 +47,7 @@ I18nPlugin.prototype.apply = function(compiler) {
 		default:
 			return;
 		}
-		var result = localization ? localization[param] : defaultValue;
+		var result = localization ? localization(param) : defaultValue;
 		if(typeof result == "undefined") {
 			var error = this.state.module[__dirname];
 			if(!error) {
@@ -61,3 +69,14 @@ I18nPlugin.prototype.apply = function(compiler) {
 	});
 
 };
+
+/**
+ *
+ * @param {object}	localization
+ * @returns {Function}
+ */
+function makeLocalizFunction(localization) {
+	return function localizFunction(key) {
+		return localization[key];
+	};
+}
