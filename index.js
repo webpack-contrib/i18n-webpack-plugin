@@ -25,7 +25,7 @@ function I18nPlugin(localization, options) {
 	}
 
 	this.options = options || {};
-	this.localization = localization? ('function' === typeof localization? localization: makeLocalizeFunction(localization, !!options.nested))
+	this.localization = localization? ('function' === typeof localization? localization: makeLocalizeFunction(localization, !!this.options.nested))
 									: null;
 	this.functionName = this.options.functionName || "__";
 	this.failOnMissing = !!this.options.failOnMissing;
@@ -89,19 +89,20 @@ I18nPlugin.prototype.apply = function(compiler) {
  * @returns {*}
  */
 function byString(object, stringKey) {
-		stringKey = stringKey.replace(/^\./, ''); // strip a leading dot
+	stringKey = stringKey.replace(/^\./, ''); // strip a leading dot
 
-		var keysArray = stringKey.split('.');
-		for (var i = 0, length = keysArray.length; i < length; ++i) {
-			var key = keysArray[i];
-				if (key in object) {
-					object = object[key];
-				} else {
-					return;
-				}
+	var keysArray = stringKey.split('.');
+	for (var i = 0, length = keysArray.length; i < length; ++i) {
+		var key = keysArray[i];
+
+		if (key in object) {
+			object = object[key];
+		} else {
+			return;
 		}
+	}
 
-		return object;
+	return object;
 }
 
 /**
