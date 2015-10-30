@@ -8,17 +8,29 @@ var MissingLocalizationError = require("./MissingLocalizationError");
 
 /**
  *
- * @param {object|function}	localization
- * @param {string}			functionName
- * @param {boolean}			failOnMissing
+ * @param {object|function} localization
+ * @param {object|string} Options object or obselete functionName string
  * @constructor
  */
-function I18nPlugin(localization, functionName, failOnMissing) {
-	this.localization = localization? ('function' === typeof localization? localization: makeLocalizFunction(localization))
+function I18nPlugin(localization, options) {
+	// Backward-compatiblility
+	if (typeof options === "string") {
+		options = {
+			functionName: options
+		};
+	}
+
+	if (arguments[2]) {
+		options.failOnMissing = arguments[2];
+	}
+
+	this.options = options || {};
+	this.localization = localization? ('function' === typeof localization? localization: makeLocalizeFunction(localization, !!this.options.nested))
 									: null;
-	this.functionName = functionName || "__";
-	this.failOnMissing = failOnMissing || false;
+	this.functionName = this.options.functionName || "__";
+	this.failOnMissing = !!this.options.failOnMissing;
 }
+
 module.exports = I18nPlugin;
 
 I18nPlugin.prototype.apply = function(compiler) {
@@ -72,11 +84,34 @@ I18nPlugin.prototype.apply = function(compiler) {
 
 /**
  *
- * @param {object}	localization
+ * @param {object}  localization
+ * @param {string}  string key
+ * @returns {*}
+ */
+function byString(object, stringKey) {
+	stringKey = stringKey.replace(/^\./, ''); // strip a leading dot
+
+	var keysArray = stringKey.split('.');
+	for (var i = 0, length = keysArray.length; i < length; ++i) {
+		var key = keysArray[i];
+
+		if (key in object) {
+			object = object[key];
+		} else {
+			return;
+		}
+	}
+
+	return object;
+}
+
+/**
+ *
+ * @param {object}  localization
  * @returns {Function}
  */
-function makeLocalizFunction(localization) {
-	return function localizFunction(key) {
-		return localization[key];
+function makeLocalizeFunction(localization, nested) {
+	return function localizeFunction(key) {
+		return nested ? byString(localization, key) : localization[key];
 	};
 }
