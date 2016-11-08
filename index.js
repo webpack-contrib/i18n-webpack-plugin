@@ -29,12 +29,14 @@ function I18nPlugin(localization, options) {
 									: null;
 	this.functionName = this.options.functionName || "__";
 	this.failOnMissing = !!this.options.failOnMissing;
+	this.hideMessage = this.options.hideMessage || false;
 }
 
 module.exports = I18nPlugin;
 
 I18nPlugin.prototype.apply = function(compiler) {
 	var localization = this.localization,
+		hideMessage = this.hideMessage,
 		failOnMissing = this.failOnMissing;
 	compiler.plugin("compilation", function(compilation, params) {
 		compilation.dependencyFactories.set(ConstDependency, new NullFactory());
@@ -61,16 +63,18 @@ I18nPlugin.prototype.apply = function(compiler) {
 		}
 		var result = localization ? localization(param) : defaultValue;
 		if(typeof result == "undefined") {
-			var error = this.state.module[__dirname];
-			if(!error) {
-				error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
-				if (failOnMissing) {
-					this.state.module.errors.push(error);
-				} else {
-					this.state.module.warnings.push(error);
+			if (!hideMessage) {
+				var error = this.state.module[__dirname];
+				if(!error) {
+					error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
+					if (failOnMissing) {
+						this.state.module.errors.push(error);
+					} else {
+						this.state.module.warnings.push(error);
+					}
+				} else if(error.requests.indexOf(param) < 0) {
+					error.add(param, defaultValue);
 				}
-			} else if(error.requests.indexOf(param) < 0) {
-				error.add(param, defaultValue);
 			}
 			result = defaultValue;
 		}
