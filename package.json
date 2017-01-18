@@ -4,7 +4,7 @@
   "author": "Tobias Koppers @sokra",
   "description": "Embed localization into your bundle",
   "peerDependencies": {
-    "webpack": ">=0.10 <2 || ^2.1.0-beta"
+    "webpack": ">=0.10 <2 || ^2.1.0-beta || ^2.2.0-rc"
   },
   "licenses": [
     {
