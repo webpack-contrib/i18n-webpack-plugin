@@ -68,11 +68,11 @@ plugins: [
 </table>
 
 
-[npm]: https://img.shields.io/npm/v/webpack-loader-seed.svg
-[npm-url]: https://npmjs.com/package/webpack-loader-seed
+[npm]: https://img.shields.io/npm/v/i18n-webpack-plugin.svg
+[npm-url]: https://npmjs.com/package/i18n-webpack-plugin
 
-[deps]: https://david-dm.org/webpack-contrib/webpack-loader-seed.svg
-[deps-url]: https://david-dm.org/webpack-contrib/webpack-loader-seed
+[deps]: https://david-dm.org/webpack-contrib/i18n-webpack-plugin.svg
+[deps-url]: https://david-dm.org/webpack-contrib/i18n-webpack-plugin
 
 [chat]: https://img.shields.io/badge/gitter-webpack%2Fwebpack-brightgreen.svg
 [chat-url]: https://gitter.im/webpack/webpack
