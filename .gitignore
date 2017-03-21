@@ -1,0 +1,6 @@
+.DS_Store
+.npm
+node_modules
+npm-debug.log*
+yarn.lock
+test/test-cases/*.tmp.js

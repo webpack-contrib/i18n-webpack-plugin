@@ -33,6 +33,8 @@ plugins: [
  - `optionsObj.functionName`: the default value is `__`, you can change it to other function name.
  - `optionsObj.failOnMissing`: the default value is `false`, which will show a warning message, if the mapping text cannot be found. If set to `true`, the message will be an error message.
  - `optionsObj.hideMessage`: the default value is `false`, which will show the warning/error message. If set to `true`, the message will be hide.
+ - `optionsObj.keyset`: the default value is `false`. Turns on the support of the nested dictionaries. Possible values: boolean, string or a custom function. String value adds the default keyset value and supports `[name]` and `[ext]` aliases. Example: `__('keyset', 'key')` will look for `{keyset: {key: 'any value'}}` in the localization object.
+ - `optionsObj.pluralRule`: chooses the rule for the [dynamic keys](https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_and_Plurals). Supports `string` aliases. Default: `0`.
 
 <h2 align="center">Maintainers</h2>
 
