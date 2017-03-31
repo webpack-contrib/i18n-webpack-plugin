@@ -6,6 +6,7 @@ const I18nPlugin = require('../../index');
 const webpack = require('webpack');
 
 exports.processFile = processFile;
+exports.requireUncache = requireUncache;
 
 function processFile(entry, localization, opts) {
   const resolvedEntry = resolve(__dirname, entry);
@@ -40,4 +41,9 @@ function read(filepath) {
       resolve(data);
     });
   });
+}
+
+function requireUncache(modulePath) {
+  delete require.cache[require.resolve(modulePath)];
+  return require(modulePath);
 }
