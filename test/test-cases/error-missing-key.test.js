@@ -7,17 +7,17 @@ test('error-missing-key', t => {
 	const localization = {};
 
 	processFile('error-missing-key.js', localization, {failOnMissing: true, hideMessage: false})
-		.then(({file}) => {
-			t.deepEqual(require(file), {
-				a: 'simple',
-				b: '4 days',
-				c: '5 nights',
-			});
-
-			t.end();
+		.then(() => {
+			throw new Error('Should respect `failOnMissing`=`true` and throw an exception');
 		})
 		.catch(er => {
-			console.error(er);
-			t.end(er);
-		});
+			if (er.name === 'MissingLocalizationError') {
+				t.pass('caught MissingLocalizationError');
+				t.equal(er.message, 'Missing localization: simple');
+				return void t.end();
+			}
+
+			throw er;
+		})
+		.catch(er => t.end(er));
 });
