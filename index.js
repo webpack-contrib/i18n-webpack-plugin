@@ -12,119 +12,124 @@ const serializeNode = require('./lib/serializeNode');
 const toDoubleDigit = number => '0' + String(number).substr(-2);
 
 const DEFAULT_OPTS = {
-	failOnMissing: false,
-	functionName: '__',
-	hideMessage: false,
-	keyset: false,
-	pluralRule: 0,
+  failOnMissing: false,
+  functionName: '__',
+  hideMessage: false,
+  keyset: false,
+  pluralRule: 0,
 };
 
 class I18nPlugin {
-	constructor(localization, opts) {
-		const options = buildOptions(opts, DEFAULT_OPTS);
-		const localizationFn = typeof localization === 'function'
-			? localization
-			: propertyOf(localization);
+  constructor(localization, opts) {
+    const options = buildOptions(opts, DEFAULT_OPTS);
+    const localizationFn = typeof localization === 'function'
+      ? localization
+      : propertyOf(localization);
 
-		const keysetFn = typeof options.keyset === 'function'
-			? options.keyset
-			: makeKeysetFn(options.keyset);
+    const keysetFn = typeof options.keyset === 'function'
+      ? options.keyset
+      : makeKeysetFn(options.keyset);
 
-		this.localizationFn = localizationFn;
-		this.keysetFn = keysetFn;
-		this.options = options;
-		this.pluralRuleModulePath = resolve(__dirname, 'lib/plural/pluralForm' + toDoubleDigit(options.pluralRule));
-	}
+    this.localizationFn = localizationFn;
+    this.keysetFn = keysetFn;
+    this.options = options;
+    this.pluralRuleModulePath = resolve(__dirname, 'lib/plural/pluralForm' + toDoubleDigit(options.pluralRule));
+  }
 
-	apply(compiler) {
-		const {functionName, failOnMissing, hideMessage, keyset: useKeyset} = this.options;
-		const {localizationFn, keysetFn, pluralRuleModulePath} = this;
+  apply(compiler) {
+    const {functionName, failOnMissing, hideMessage, keyset: useKeyset} = this.options;
+    const {localizationFn, keysetFn, pluralRuleModulePath} = this;
 
-		compiler.plugin('compilation', function (compilation, data) {
-			data.normalModuleFactory.plugin('parser', function (parser, opts) {
-				parser.plugin('call ' + functionName, function (expr) {
-					let keyExpr;
-					let keysetExpr;
+    compiler.plugin('compilation', (compilation, data) => {
+      data.normalModuleFactory.plugin('parser', (parser, opts) => {
+        parser.plugin('call ' + functionName, function(expr) {
+          let keyExpr;
+          let keysetExpr;
 
-					switch (expr.arguments.length) {
-					case 1:
-						keyExpr = expr.arguments[0];
-						break;
-					case 2:
-						keysetExpr = expr.arguments[0];
-						keyExpr = expr.arguments[1];
+          switch (expr.arguments.length) {
+          case 1:
+            keyExpr = expr.arguments[0];
+            break;
+          case 2:
+            keysetExpr = expr.arguments[0];
+            keyExpr = expr.arguments[1];
 
-						if (useKeyset && parser.evaluateExpression(keysetExpr).isString()) break;
-						return;
-					default:
-						return;
-					}
+            if (useKeyset && parser.evaluateExpression(keysetExpr).isString()) break;
 
-					const evaluatedKeyExpr = parser.evaluateExpression(keyExpr);
+            return;
+          default:
+            return;
+          }
 
-					if (!(
-						evaluatedKeyExpr.isString() ||
-						evaluatedKeyExpr.isTemplateString()
-					)) return;
+          const evaluatedKeyExpr = parser.evaluateExpression(keyExpr);
 
-					const keysetParam = keysetExpr ? serializeNode(keysetExpr) : null;
-					const keyset = keysetFn(keysetParam, this.state.current.request);
-					const key = serializeNode(keyExpr);
-					let translation = localizationFn(key, keyset);
+          if (!(
+            evaluatedKeyExpr.isString() ||
+            evaluatedKeyExpr.isTemplateString()
+          )) return;
 
-					if (typeof translation === 'undefined') {
-						if (!hideMessage) {
-							let error = this.state.module[__dirname];
+          const keysetParam = keysetExpr ? serializeNode(keysetExpr) : null;
+          const keyset = keysetFn(keysetParam, this.state.current.request);
+          const key = serializeNode(keyExpr);
+          let translation = localizationFn(key, keyset);
 
-							if (!error) {
-								error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, keyset, key);
+          if (typeof translation === 'undefined') {
+            if (!hideMessage) {
+              let error = this.state.module[__dirname];
 
-								if (failOnMissing) this.state.module.errors.push(error)
-								else this.state.module.warnings.push(error);
-							} else if (!error.requests.includes(evaluatedKeyExpr)) {
-								error.add(keyset, key);
-							}
-						}
+              if (!error) {
+                error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, keyset, key);
 
-						translation = key;
-					}
+                if (failOnMissing) this.state.module.errors.push(error);
+                else this.state.module.warnings.push(error);
+              } else if (!error.requests.includes(evaluatedKeyExpr)) {
+                error.add(keyset, key);
+              }
+            }
 
-					if (evaluatedKeyExpr.isString()) {
-						const stringDep = new ConstDependency(JSON.stringify(translation), expr.range);
-						this.state.current.addDependency(stringDep);
+            translation = key;
+          }
 
-						return true;
-					}
+          if (evaluatedKeyExpr.isString()) {
+            const stringDep = new ConstDependency(JSON.stringify(translation), expr.range);
 
-					const identifierNode = keyExpr.expressions[0];
-					const placeholder = serializeNode(identifierNode);
+            this.state.current.addDependency(stringDep);
 
-					if (!Array.isArray(translation)) {
-						const stringDep = new ConstDependency(buildDynamicShim(identifierNode.name, translation, placeholder), expr.range);
-						this.state.current.addDependency(stringDep);
+            return true;
+          }
 
-						return true;
-					}
+          const identifierNode = keyExpr.expressions[0];
+          const placeholder = serializeNode(identifierNode);
 
-					const pluralModule = requireFileAsExpression(this.state.module.context, pluralRuleModulePath);
-					addParsedVariableToModule(this, functionName, pluralModule);
+          if (!Array.isArray(translation)) {
+            const stringDep = new ConstDependency(buildDynamicShim(identifierNode.name, translation, placeholder), expr.range);
 
-					const fnDep = new ConstDependency(buildFnCall(functionName, identifierNode.name, translation, placeholder), expr.range);
-					this.state.current.addDependency(fnDep);
+            this.state.current.addDependency(stringDep);
 
-					return true;
-				});
-			});
-		});
-	}
+            return true;
+          }
+
+          const pluralModule = requireFileAsExpression(this.state.module.context, pluralRuleModulePath);
+
+          addParsedVariableToModule(this, functionName, pluralModule);
+
+          const fnDep = new ConstDependency(buildFnCall(functionName, identifierNode.name, translation, placeholder), expr.range);
+
+          this.state.current.addDependency(fnDep);
+
+          return true;
+        });
+      });
+    });
+  }
 }
 
 module.exports = I18nPlugin;
 
 function buildDynamicShim(identifierName, translation, placeholder) {
-	return `${JSON.stringify(translation)}.replace(${JSON.stringify(placeholder)}, ${identifierName})`;
+  return `${JSON.stringify(translation)}.replace(${JSON.stringify(placeholder)}, ${identifierName})`;
 }
 
 function buildFnCall(fnName, identifierName, forms, placeholder) {
-	return `${JSON.stringify(forms)}[${fnName}(${identifierName})].replace(${JSON.stringify(placeholder)}, ${identifierName})`;
+  return `${JSON.stringify(forms)}[${fnName}(${identifierName})].replace(${JSON.stringify(placeholder)}, ${identifierName})`;
 }

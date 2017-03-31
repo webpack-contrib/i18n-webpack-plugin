@@ -4,20 +4,20 @@ const {processFile} = require('./_setup');
 const test = require('tape');
 
 test('explicit-keyset', t => {
-	const localization = {
-		foo: {
-			bar: 'translated bar',
-		},
-	};
+  const localization = {
+    foo: {
+      bar: 'translated bar',
+    },
+  };
 
-	processFile('explicit-keyset.js', localization, {keyset: true})
+  processFile('explicit-keyset.js', localization, {keyset: true})
 		.then(({file}) => {
-			t.equal(require(file), 'translated bar');
+  t.equal(require(file), 'translated bar');
 
-			t.end();
-		})
+  t.end();
+})
 		.catch(er => {
-			console.error(er);
-			t.end(er);
-		});
+  console.error(er);
+  t.end(er);
+});
 });

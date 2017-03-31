@@ -27,10 +27,10 @@ function processFile(entry, localization, opts) {
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {
       if (err) return void reject(err);
-			if (stats.compilation.errors.length) return void reject(stats.compilation.errors[0]);
+      if (stats.compilation.errors.length) return void reject(stats.compilation.errors[0]);
       resolve(read(resolvedOutput).then(raw => ({file: resolvedOutput, raw, stats})));
     });
-  })
+  });
 }
 
 function read(filepath) {
