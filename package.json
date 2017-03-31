@@ -17,8 +17,8 @@
     "url": "https://github.com/webpack/i18n-webpack-plugin.git"
   },
   "scripts": {
-    "test": "tape test/**/*.test.js",
-    "watch": "chokidar index.js lib/*.js -c 'npm test'"
+    "autotest": "chokidar index.js lib test -i **/*.tmp.js -c 'npm test'",
+    "test": "tape test/**/*.test.js"
   },
   "devDependencies": {
     "acorn": "^4.0.11",

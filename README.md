@@ -36,6 +36,13 @@ plugins: [
  - `optionsObj.keyset`: the default value is `false`. Turns on the support of the nested dictionaries. Possible values: boolean, string or a custom function. String value adds the default keyset value and supports `[name]` and `[ext]` aliases. Example: `__('keyset', 'key')` will look for `{keyset: {key: 'any value'}}` in the localization object.
  - `optionsObj.pluralRule`: chooses the rule for the [dynamic keys](https://developer.mozilla.org/en-US/docs/Mozilla/Localization/Localization_and_Plurals). Supports `string` aliases. Default: `0`.
 
+
+<h2 align="center">Development</h2>
+
+- `npm run test` will run tests
+- `npm run autotest` will watch `lib`, `test` and `index.js` for changes and retest
+
+
 <h2 align="center">Maintainers</h2>
 
 <table>
