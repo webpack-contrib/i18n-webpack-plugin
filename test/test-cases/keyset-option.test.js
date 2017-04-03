@@ -10,10 +10,10 @@ const localization = {
   identityCall: {
     key: 'translated key with a call of a keyset custom fn',
   },
-  keyset: {
+  'keyset-option': {
     key: 'translated key with defined keyset as a filename',
   },
-  keysetjs: {
+  'keyset-option_js': {
     key: 'translated key with defined keyset as a filename + extension'
   },
   nested: {
@@ -24,7 +24,7 @@ const localization = {
 };
 
 test('keyset=[name]', t => {
-  processFile('keyset.js', localization, {keyset: '[name]'})
+  processFile('keyset-option.js', localization, {keyset: '[name]'})
     .then(({file}) => {
       const {A, B} = requireUncache(file);
 
@@ -35,8 +35,8 @@ test('keyset=[name]', t => {
     .catch(er => t.end(er));
 });
 
-test('keyset=[name][ext]', t => {
-  processFile('keyset.js', localization, {keyset: '[name][ext]'})
+test('keyset=[name]_[ext]', t => {
+  processFile('keyset-option.js', localization, {keyset: '[name]_[ext]'})
     .then(({file}) => {
       const {A, B} = requireUncache(file);
 
@@ -50,7 +50,7 @@ test('keyset=[name][ext]', t => {
 test('keyset=fn', t => {
   const keysetFn = spy(constant('identityCall'));
 
-  processFile('keyset.js', localization, {keyset: keysetFn})
+  processFile('keyset-option.js', localization, {keyset: keysetFn})
     .then(({file}) => {
       const {A, B} = requireUncache(file);
 
