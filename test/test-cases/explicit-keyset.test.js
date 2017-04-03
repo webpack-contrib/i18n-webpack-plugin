@@ -11,13 +11,10 @@ test('explicit-keyset', t => {
   };
 
   processFile('explicit-keyset.js', localization, {keyset: true})
-		.then(({file}) => {
-  t.equal(require(file), 'translated bar');
+    .then(({file}) => {
+      t.equal(require(file), 'translated bar');
 
-  t.end();
-})
-		.catch(er => {
-  console.error(er);
-  t.end(er);
-});
+      t.end();
+    })
+    .catch(er => t.end(er));
 });

@@ -8,16 +8,13 @@ test('missing-key', t => {
 
   processFile('missing-key.js', localization, {failOnMissing: false, keyset: true})
 		.then(({file}) => {
-  t.deepEqual(require(file), {
-    a: 'simple',
-    b: '4 days',
-    c: '5 nights',
-  });
+      t.deepEqual(require(file), {
+        a: 'simple',
+        b: '4 days',
+        c: '5 nights',
+      });
 
-  t.end();
-})
-		.catch(er => {
-  console.error(er);
-  t.end(er);
-});
+      t.end();
+    })
+    .catch(er => t.end(er));
 });

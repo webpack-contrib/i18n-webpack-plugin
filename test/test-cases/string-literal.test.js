@@ -9,13 +9,10 @@ test('string-literal', t => {
   };
 
   processFile('string-literal.js', localization)
-		.then(({file}) => {
-  t.equal(require(file), 'simple');
+    .then(({file}) => {
+      t.equal(require(file), 'simple');
 
-  t.end();
-})
-		.catch(er => {
-  console.error(er);
-  t.end(er);
-});
+      t.end();
+    })
+    .catch(er => t.end(er));
 });

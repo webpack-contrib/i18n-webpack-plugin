@@ -9,13 +9,10 @@ test('template-literal', t => {
   };
 
   processFile('template-literal.js', localization)
-		.then(({file}) => {
-  t.equal(require(file), '4 days');
+    .then(({file}) => {
+      t.equal(require(file), '4 days');
 
-  t.end();
-})
-		.catch(er => {
-  console.error(er);
-  t.end(er);
-});
+      t.end();
+    })
+    .catch(er => t.end(er));
 });

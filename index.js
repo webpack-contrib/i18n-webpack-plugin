@@ -1,14 +1,15 @@
 'use strict';
 
-const {addParsedVariableToModule, requireFileAsExpression} = require('webpack/lib/ParserHelpers');
 const {makeKeysetFn} = require('./lib/keyset');
-const {resolve} = require('path');
+const {relative, resolve} = require('path');
+const ParserHelpers = require('webpack/lib/ParserHelpers');
 const ConstDependency = require('webpack/lib/dependencies/ConstDependency');
 const MissingLocalizationError = require('./lib/MissingLocalizationError');
 const buildOptions = require('./lib/buildOptions');
 const propertyOf = require('./lib/propertyOf');
 const serializeNode = require('./lib/serializeNode');
 
+const resolveTo = (...args) => resolve(__dirname, ...args);
 const toDoubleDigit = number => '0' + String(number).substr(-2);
 
 const DEFAULT_OPTS = {
@@ -16,6 +17,7 @@ const DEFAULT_OPTS = {
   functionName: '__',
   hideMessage: false,
   keyset: false,
+  pluralIdentName: 'count',
   pluralRule: 0,
 };
 
@@ -33,12 +35,13 @@ class I18nPlugin {
     this.localizationFn = localizationFn;
     this.keysetFn = keysetFn;
     this.options = options;
-    this.pluralRuleModulePath = resolve(__dirname, 'lib/plural/pluralForm' + toDoubleDigit(options.pluralRule));
+    this.pluralRuleModulePath = 'lib/plural/pluralForm' + toDoubleDigit(options.pluralRule);
   }
 
   apply(compiler) {
-    const {functionName, failOnMissing, hideMessage, keyset: useKeyset} = this.options;
+    const {functionName, failOnMissing, hideMessage, keyset: useKeyset, pluralIdentName} = this.options;
     const {localizationFn, keysetFn, pluralRuleModulePath} = this;
+    const i18nPlugin = this;
 
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, opts) => {
@@ -91,45 +94,70 @@ class I18nPlugin {
           }
 
           if (evaluatedKeyExpr.isString()) {
-            const stringDep = new ConstDependency(JSON.stringify(translation), expr.range);
-
+            const stringDep = i18nPlugin._buildStringLiteralKeyDependency(translation, expr.range);
             this.state.current.addDependency(stringDep);
 
             return true;
           }
 
-          const identifierNode = keyExpr.expressions[0];
-          const placeholder = serializeNode(identifierNode);
+          const isPluralKey = keyExpr.expressions.some(expr =>
+            expr.type === 'Identifier' && expr.name === pluralIdentName);
 
-          if (!Array.isArray(translation)) {
-            const stringDep = new ConstDependency(buildDynamicShim(identifierNode.name, translation, placeholder), expr.range);
-
-            this.state.current.addDependency(stringDep);
-
-            return true;
-          }
-
-          const pluralModule = requireFileAsExpression(this.state.module.context, pluralRuleModulePath);
-
-          addParsedVariableToModule(this, functionName, pluralModule);
-
-          const fnDep = new ConstDependency(buildFnCall(functionName, identifierNode.name, translation, placeholder), expr.range);
+          const fnDep = isPluralKey && Array.isArray(translation) // small fallback for the missing dynamic key translation
+            ? i18nPlugin._buildDynamicKeyDependency(translation, keyExpr, expr.range)
+            : i18nPlugin._buildParametrizedKeyDependency(translation, keyExpr, expr.range);
 
           this.state.current.addDependency(fnDep);
+
+          const pluralRuleModule = i18nPlugin._generateRequireExpr(this.state.module.context, pluralRuleModulePath);
+          const interpolateModule = i18nPlugin._generateRequireExpr(this.state.module.context, 'lib/interpolate');
+
+          ParserHelpers.addParsedVariableToModule(this, functionName, `${interpolateModule}(${pluralRuleModule})`);
 
           return true;
         });
       });
     });
   }
+
+  _buildDynamicKeyDependency(forms, keyExpr, range) {
+    const {functionName, pluralIdentName} = this.options;
+    const replacements = this._serializeExpr(keyExpr);
+    const expr = `${functionName}(${pluralIdentName}, ${JSON.stringify(forms)}, ${replacements})`;
+
+    return new ConstDependency(expr, range);
+  }
+
+  _buildParametrizedKeyDependency(translation, keyExpr, range) {
+    const {functionName} = this.options;
+    const replacements = this._serializeExpr(keyExpr);
+    const expr = `${functionName}(null, ${JSON.stringify(translation)}, ${replacements})`;
+
+    return new ConstDependency(expr, range);
+  }
+
+  _buildStringLiteralKeyDependency(translation, range) {
+    const expr = JSON.stringify(translation);
+
+    return new ConstDependency(expr, range);
+  }
+
+  _generateRequireExpr(context, pathToModule) {
+    let moduleJsPath = relative(context, resolveTo(pathToModule));
+
+    if (!/^[A-Z]:/i.test(moduleJsPath)) {
+      moduleJsPath = './' + moduleJsPath.replace(/\\/g, '/');
+    }
+
+    return `require(${JSON.stringify(moduleJsPath)})`;
+  }
+
+  _serializeExpr(expr) {
+    const pairs = expr.expressions.map(identifier =>
+      JSON.stringify(serializeNode(identifier)) + ': ' + identifier.name);
+
+    return '{' + pairs + '}';
+  }
 }
 
 module.exports = I18nPlugin;
-
-function buildDynamicShim(identifierName, translation, placeholder) {
-  return `${JSON.stringify(translation)}.replace(${JSON.stringify(placeholder)}, ${identifierName})`;
-}
-
-function buildFnCall(fnName, identifierName, forms, placeholder) {
-  return `${JSON.stringify(forms)}[${fnName}(${identifierName})].replace(${JSON.stringify(placeholder)}, ${identifierName})`;
-}
