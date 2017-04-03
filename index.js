@@ -1,123 +1,169 @@
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-var ConstDependency = require("webpack/lib/dependencies/ConstDependency");
-var NullFactory = require("webpack/lib/NullFactory");
-var MissingLocalizationError = require("./MissingLocalizationError");
+'use strict';
 
-/**
- *
- * @param {object|function} localization
- * @param {object|string} Options object or obselete functionName string
- * @constructor
- */
-function I18nPlugin(localization, options) {
-	// Backward-compatiblility
-	if (typeof options === "string") {
-		options = {
-			functionName: options
-		};
-	}
+const {makeKeysetFn} = require('./lib/keyset');
+const {relative, resolve} = require('path');
+const ParserHelpers = require('webpack/lib/ParserHelpers');
+const ConstDependency = require('webpack/lib/dependencies/ConstDependency');
+const MissingLocalizationError = require('./lib/MissingLocalizationError');
+const NullFactory = require('webpack/lib/NullFactory');
+const buildOptions = require('./lib/buildOptions');
+const propertyOf = require('./lib/propertyOf');
+const serializeNode = require('./lib/serializeNode');
 
-	if (arguments[2]) {
-		options.failOnMissing = arguments[2];
-	}
+const resolveTo = (...args) => resolve(__dirname, ...args);
+const toDoubleDigit = number => '0' + String(number).substr(-2);
 
-	this.options = options || {};
-	this.localization = localization? ('function' === typeof localization? localization: makeLocalizeFunction(localization, !!this.options.nested))
-									: null;
-	this.functionName = this.options.functionName || "__";
-	this.failOnMissing = !!this.options.failOnMissing;
-	this.hideMessage = this.options.hideMessage || false;
+const DEFAULT_OPTS = {
+  failOnMissing: false,
+  functionName: '__',
+  hideMessage: false,
+  keyset: false,
+  pluralIdentName: 'count',
+  pluralRule: 0,
+};
+
+class I18nPlugin {
+  constructor(localization, opts) {
+    const options = buildOptions(opts, DEFAULT_OPTS);
+    const localizationFn = typeof localization === 'function'
+      ? localization
+      : propertyOf(localization);
+
+    const keysetFn = typeof options.keyset === 'function'
+      ? options.keyset
+      : makeKeysetFn(options.keyset);
+
+    this.localizationFn = localizationFn;
+    this.keysetFn = keysetFn;
+    this.options = options;
+    this.pluralRuleModulePath = 'lib/plural/pluralForm' + toDoubleDigit(options.pluralRule);
+  }
+
+  apply(compiler) {
+    const {functionName, failOnMissing, hideMessage, keyset: useKeyset, pluralIdentName} = this.options;
+    const {localizationFn, keysetFn, pluralRuleModulePath} = this;
+    const i18nPlugin = this;
+
+    compiler.plugin('compilation', (compilation, params) => {
+      compilation.dependencyFactories.set(ConstDependency, new NullFactory());
+      compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
+    });
+
+    compiler.plugin('compilation', (compilation, data) => {
+      data.normalModuleFactory.plugin('parser', (parser, opts) => {
+        parser.plugin('call ' + functionName, function(expr) {
+          let keyExpr;
+          let keysetExpr;
+
+          switch (expr.arguments.length) {
+          case 1:
+            keyExpr = expr.arguments[0];
+            break;
+          case 2:
+            keysetExpr = expr.arguments[0];
+            keyExpr = expr.arguments[1];
+
+            if (useKeyset && parser.evaluateExpression(keysetExpr).isString()) break;
+
+            return;
+          default:
+            return;
+          }
+
+          const evaluatedKeyExpr = parser.evaluateExpression(keyExpr);
+
+          if (!(
+            evaluatedKeyExpr.isString() ||
+            evaluatedKeyExpr.isTemplateString()
+          )) return;
+
+          const keysetParam = keysetExpr ? serializeNode(keysetExpr) : null;
+          const keyset = keysetFn(keysetParam, this.state.current.request);
+          const key = serializeNode(keyExpr);
+          let translation = localizationFn(key, keyset);
+
+          if (typeof translation === 'undefined') {
+            if (!hideMessage) {
+              let error = this.state.module[__dirname];
+
+              if (!error) {
+                error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, keyset, key);
+
+                if (failOnMissing) this.state.module.errors.push(error);
+                else this.state.module.warnings.push(error);
+              } else if (!error.requests.includes(evaluatedKeyExpr)) {
+                error.add(keyset, key);
+              }
+            }
+
+            translation = key;
+          }
+
+          if (evaluatedKeyExpr.isString()) {
+            const stringDep = i18nPlugin._buildStringLiteralKeyDependency(translation, expr.range);
+            this.state.current.addDependency(stringDep);
+
+            return true;
+          }
+
+          const isPluralKey = keyExpr.expressions.some(expr =>
+            expr.type === 'Identifier' && expr.name === pluralIdentName);
+
+          const fnDep = isPluralKey && Array.isArray(translation) // small fallback for the missing dynamic key translation
+            ? i18nPlugin._buildDynamicKeyDependency(translation, keyExpr, expr.range)
+            : i18nPlugin._buildParametrizedKeyDependency(translation, keyExpr, expr.range);
+
+          this.state.current.addDependency(fnDep);
+
+          const pluralRuleModule = i18nPlugin._generateRequireExpr(this.state.module.context, pluralRuleModulePath);
+          const interpolateModule = i18nPlugin._generateRequireExpr(this.state.module.context, 'lib/interpolate');
+
+          ParserHelpers.addParsedVariableToModule(this, functionName, `${interpolateModule}(${pluralRuleModule})`);
+
+          return true;
+        });
+      });
+    });
+  }
+
+  _buildDynamicKeyDependency(forms, keyExpr, range) {
+    const {functionName, pluralIdentName} = this.options;
+    const replacements = this._serializeExpr(keyExpr);
+    const expr = `${functionName}(${pluralIdentName}, ${JSON.stringify(forms)}, ${replacements})`;
+
+    return new ConstDependency(expr, range);
+  }
+
+  _buildParametrizedKeyDependency(translation, keyExpr, range) {
+    const {functionName} = this.options;
+    const replacements = this._serializeExpr(keyExpr);
+    const expr = `${functionName}(null, ${JSON.stringify(translation)}, ${replacements})`;
+
+    return new ConstDependency(expr, range);
+  }
+
+  _buildStringLiteralKeyDependency(translation, range) {
+    const expr = JSON.stringify(translation);
+
+    return new ConstDependency(expr, range);
+  }
+
+  _generateRequireExpr(context, pathToModule) {
+    let moduleJsPath = relative(context, resolveTo(pathToModule));
+
+    if (!/^[A-Z]:/i.test(moduleJsPath)) {
+      moduleJsPath = './' + moduleJsPath.replace(/\\/g, '/');
+    }
+
+    return `require(${JSON.stringify(moduleJsPath)})`;
+  }
+
+  _serializeExpr(expr) {
+    const pairs = expr.expressions.map(identifier =>
+      JSON.stringify(serializeNode(identifier)) + ': ' + identifier.name);
+
+    return '{' + pairs + '}';
+  }
 }
 
 module.exports = I18nPlugin;
-
-I18nPlugin.prototype.apply = function(compiler) {
-	var localization = this.localization,
-		hideMessage = this.hideMessage,
-		failOnMissing = this.failOnMissing;
-	compiler.plugin("compilation", function(compilation, params) {
-		compilation.dependencyFactories.set(ConstDependency, new NullFactory());
-		compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
-	});
-	var that = this;
-	compiler.plugin("compilation", function(compilation, data) {
-		data.normalModuleFactory.plugin("parser", function(parser, options) {
-			parser.plugin("call " + that.functionName, function(expr) {
-				var param, defaultValue;
-				switch(expr.arguments.length) {
-				case 2:
-					param = this.evaluateExpression(expr.arguments[1]);
-					if(!param.isString()) return;
-					param = param.string;
-					defaultValue = this.evaluateExpression(expr.arguments[0]);
-					if(!defaultValue.isString()) return;
-					defaultValue = defaultValue.string;
-					break;
-				case 1:
-					param = this.evaluateExpression(expr.arguments[0]);
-					if(!param.isString()) return;
-					defaultValue = param = param.string;
-					break;
-				default:
-					return;
-				}
-				var result = localization ? localization(param) : defaultValue;
-				if(typeof result == "undefined") {
-					var error = this.state.module[__dirname];
-					if(!error) {
-						error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
-						if (failOnMissing) {
-							this.state.module.errors.push(error);
-						} else {
-							this.state.module.warnings.push(error);
-						}
-					} else if(error.requests.indexOf(param) < 0) {
-						error.add(param, defaultValue);
-					}
-					result = defaultValue;
-				}
-				var dep = new ConstDependency(JSON.stringify(result), expr.range);
-				dep.loc = expr.loc;
-				this.state.current.addDependency(dep);
-				return true;
-			});
-		});
-	});
-};
-
-/**
- *
- * @param {object}  localization
- * @param {string}  string key
- * @returns {*}
- */
-function byString(object, stringKey) {
-	stringKey = stringKey.replace(/^\./, ''); // strip a leading dot
-
-	var keysArray = stringKey.split('.');
-	for (var i = 0, length = keysArray.length; i < length; ++i) {
-		var key = keysArray[i];
-
-		if (key in object) {
-			object = object[key];
-		} else {
-			return;
-		}
-	}
-
-	return object;
-}
-
-/**
- *
- * @param {object}  localization
- * @returns {Function}
- */
-function makeLocalizeFunction(localization, nested) {
-	return function localizeFunction(key) {
-		return nested ? byString(localization, key) : localization[key];
-	};
-}
