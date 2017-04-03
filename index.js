@@ -5,6 +5,7 @@ const {relative, resolve} = require('path');
 const ParserHelpers = require('webpack/lib/ParserHelpers');
 const ConstDependency = require('webpack/lib/dependencies/ConstDependency');
 const MissingLocalizationError = require('./lib/MissingLocalizationError');
+const NullFactory = require('webpack/lib/NullFactory');
 const buildOptions = require('./lib/buildOptions');
 const propertyOf = require('./lib/propertyOf');
 const serializeNode = require('./lib/serializeNode');
@@ -42,6 +43,11 @@ class I18nPlugin {
     const {functionName, failOnMissing, hideMessage, keyset: useKeyset, pluralIdentName} = this.options;
     const {localizationFn, keysetFn, pluralRuleModulePath} = this;
     const i18nPlugin = this;
+
+    compiler.plugin('compilation', (compilation, params) => {
+      compilation.dependencyFactories.set(ConstDependency, new NullFactory());
+      compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
+    });
 
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, opts) => {
