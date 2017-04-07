@@ -5,6 +5,7 @@
 import ConstDependency from 'webpack/lib/dependencies/ConstDependency';
 import NullFactory from 'webpack/lib/NullFactory';
 import MissingLocalizationError from './MissingLocalizationError';
+import makeLocalizeFunction from './MakeLocalizeFunction';
 
 /**
  *
@@ -89,38 +90,3 @@ class I18nPlugin {
 }
 
 export default I18nPlugin;
-
-/**
- *
- * @param {object}  localization
- * @param {string}  string key
- * @returns {*}
- */
-function byString(object, string) {
-  // strip a leading dot
-  const stringKey = string.replace(/^\./, '');
-
-  const keysArray = stringKey.split('.');
-  for (let i = 0, length = keysArray.length; i < length; ++i) {
-    const key = keysArray[i];
-
-    if (key in object) {
-      object = object[key];
-    } else {
-      return;
-    }
-  }
-
-  return object;
-}
-
-/**
- *
- * @param {object}  localization
- * @returns {Function}
- */
-function makeLocalizeFunction(localization, nested) {
-  return function localizeFunction(key) {
-    return nested ? byString(localization, key) : localization[key];
-  };
-}
