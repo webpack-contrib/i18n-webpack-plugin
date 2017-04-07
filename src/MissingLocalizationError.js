@@ -2,6 +2,7 @@
   MIT License http://www.opensource.org/licenses/mit-license.php
   Author Tobias Koppers @sokra
 */
+
 class MissingLocalizationError {
   constructor(module, name, value) {
     Error.call(this);
