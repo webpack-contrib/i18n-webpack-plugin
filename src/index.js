@@ -34,17 +34,17 @@ class I18nPlugin {
   }
 
   apply(compiler) {
-    const localization = this.localization;
-    const hideMessage = this.hideMessage; // eslint-disable-line no-unused-vars
-    const failOnMissing = this.failOnMissing;
+    const { localization, failOnMissing, hideMessage } = this; // eslint-disable-line no-unused-vars
+    const name = this.functionName;
+
     compiler.plugin('compilation', (compilation, params) => { // eslint-disable-line no-unused-vars
       compilation.dependencyFactories.set(ConstDependency, new NullFactory());
       compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
     });
-    const that = this;
+
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, options) => { // eslint-disable-line no-unused-vars
-        parser.plugin(`call ${that.functionName}`, function (expr) {
+        parser.plugin(`call ${name}`, function (expr) {
           let param;
           let defaultValue;
           switch (expr.arguments.length) {
