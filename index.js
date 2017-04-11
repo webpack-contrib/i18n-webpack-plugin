@@ -74,7 +74,8 @@ class I18nPlugin {
 
           if (!(
             evaluatedKeyExpr.isString() ||
-            evaluatedKeyExpr.isTemplateString()
+            evaluatedKeyExpr.isTemplateString() ||
+            keyExpr.type === 'BinaryExpression'
           )) return;
 
           const keysetParam = keysetExpr ? serializeNode(keysetExpr) : null;
@@ -106,8 +107,17 @@ class I18nPlugin {
             return true;
           }
 
-          const isPluralKey = keyExpr.expressions.some(expr =>
-            expr.type === 'Identifier' && expr.name === pluralIdentName);
+          let isPluralKey = false;
+
+          if (keyExpr.type === 'BinaryExpression') {
+            walkBinaryExpr(keyExpr, expr => {
+              if (expr.type === 'Identifier' && expr.name === pluralIdentName)
+                isPluralKey = true;
+            });
+          } else {
+            isPluralKey = keyExpr.expressions.some(expr =>
+              expr.type === 'Identifier' && expr.name === pluralIdentName);
+          }
 
           const fnDep = isPluralKey && Array.isArray(translation) // small fallback for the missing dynamic key translation
             ? i18nPlugin._buildDynamicKeyDependency(translation, keyExpr, expr.range)
@@ -159,11 +169,37 @@ class I18nPlugin {
   }
 
   _serializeExpr(expr) {
-    const pairs = expr.expressions.map(identifier =>
-      JSON.stringify(serializeNode(identifier)) + ': ' + identifier.name);
+    let pairs;
 
-    return '{' + pairs + '}';
+    if (expr.type === 'BinaryExpression') {
+      pairs = [];
+      walkBinaryExpr(expr, expression => {
+        if (expression.type === 'Identifier') {
+          pairs.push(JSON.stringify(serializeNode(expression)) + ': ' + expression.name);
+        }
+      });
+    } else {
+      pairs = expr.expressions.map(identifier =>
+        JSON.stringify(serializeNode(identifier)) + ': ' + identifier.name);
+    }
+
+    return '{' + pairs.join(', ') + '}';
   }
 }
 
 module.exports = I18nPlugin;
+
+function walkBinaryExpr(expr, iteratee) {
+  switch (expr.type) {
+  case 'BinaryExpression':
+    walkBinaryExpr(expr.left, iteratee);
+    walkBinaryExpr(expr.right, iteratee);
+    break;
+  case 'Identifier':
+  case 'Literal':
+    iteratee(expr);
+    break;
+  default:
+    throw 'Unknown expression type `' + expr.type + '`';
+  }
+}

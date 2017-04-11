@@ -19,6 +19,7 @@ test('key-expression', t => {
     .then(({file}) => {
       const sample = requireUncache(file);
 
+      t.equal(sample.dynamicBinaryKey, '1 яблоко в корзине');
       t.equal(sample.dynamicTemplateKey, '1 яблоко в корзине');
       t.equal(sample.parametrizedTemplateKey, 'пример шаблона с p1 и p2');
       t.equal(sample.staticKey, 'статичный ключ');
