@@ -20,6 +20,8 @@ npm i -D i18n-webpack-plugin
 
 <h2 align="center">Usage</h2>
 
+This plugin creates bundles with translations baked in. So you can serve the translated bundle to your clients.
+
 see [webpack/webpack/examples/i18n](https://github.com/webpack/webpack/tree/master/examples/i18n).
 
 <h2 align="center">Options</h2>
