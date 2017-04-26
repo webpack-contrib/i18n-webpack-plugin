@@ -119,7 +119,7 @@ class I18nPlugin {
               expr.type === 'Identifier' && expr.name === pluralIdentName);
           }
 
-          const fnDep = isPluralKey && Array.isArray(translation) // small fallback for the missing dynamic key translation
+          const fnDep = isPluralKey
             ? i18nPlugin._buildDynamicKeyDependency(translation, keyExpr, expr.range)
             : i18nPlugin._buildParametrizedKeyDependency(translation, keyExpr, expr.range);
 
@@ -139,7 +139,7 @@ class I18nPlugin {
   _buildDynamicKeyDependency(forms, keyExpr, range) {
     const {functionName, pluralIdentName} = this.options;
     const replacements = this._serializeExpr(keyExpr);
-    const expr = `${functionName}(${pluralIdentName}, ${JSON.stringify(forms)}, ${replacements})`;
+    const expr = `${functionName}(${JSON.stringify(forms)}, ${replacements}, ${pluralIdentName})`;
 
     return new ConstDependency(expr, range);
   }
@@ -147,7 +147,7 @@ class I18nPlugin {
   _buildParametrizedKeyDependency(translation, keyExpr, range) {
     const {functionName} = this.options;
     const replacements = this._serializeExpr(keyExpr);
-    const expr = `${functionName}(null, ${JSON.stringify(translation)}, ${replacements})`;
+    const expr = `${functionName}(${JSON.stringify(translation)}, ${replacements})`;
 
     return new ConstDependency(expr, range);
   }
