@@ -1537,9 +1537,9 @@ escope@^3.6.0:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint-config-webpack@^1.1.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/eslint-config-webpack/-/eslint-config-webpack-1.2.1.tgz#4ae669faf2f4bdd8d9bb2b3233998a85ce9218a2"
+eslint-config-webpack@^1.2.1:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/eslint-config-webpack/-/eslint-config-webpack-1.2.2.tgz#32e78038d11e35c1b1a66836fe051eca5e9b5f1a"
 
 eslint-import-resolver-node@^0.2.0:
   version "0.2.3"
@@ -1571,7 +1571,7 @@ eslint-plugin-import@^2.2.0:
     minimatch "^3.0.3"
     pkg-up "^1.0.0"
 
-eslint@^3.18.0:
+eslint@^3.19.0:
   version "3.19.0"
   resolved "https://registry.yarnpkg.com/eslint/-/eslint-3.19.0.tgz#c8fc6201c7f40dd08941b87c085767386a679acc"
   dependencies:
@@ -4435,13 +4435,9 @@ window-size@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
 
-wordwrap@0.0.2:
+wordwrap@0.0.2, wordwrap@~0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/wordwrap/-/wordwrap-0.0.2.tgz#b79669bb42ecb409f83d583cad52ca17eaa1643f"
-
-wordwrap@~0.0.2:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/wordwrap/-/wordwrap-0.0.3.tgz#a3d5da6cd5c0bc0008d37234bbaf1bed63059107"
 
 wordwrap@~1.0.0:
   version "1.0.0"

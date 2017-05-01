@@ -44,7 +44,7 @@ class I18nPlugin {
 
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, options) => { // eslint-disable-line no-unused-vars
-        parser.plugin(`call ${name}`, function (expr) {
+        parser.plugin(`call ${name}`, (expr) => {
           let param;
           let defaultValue;
           switch (expr.arguments.length) {
@@ -65,10 +65,12 @@ class I18nPlugin {
               return;
           }
           let result = localization ? localization(param) : defaultValue;
+
           if (typeof result === 'undefined') {
-            let error = this.state.module[__dirname];
+            let error = this.state.module[__dirname]; // eslint-disable-line no-underscore-dangle
             if (!error) {
-              error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
+              error = this.state.module[__dirname] = // eslint-disable-line no-underscore-dangle
+              new MissingLocalizationError(this.state.module, param, defaultValue);
               if (failOnMissing) {
                 this.state.module.errors.push(error);
               } else if (!hideMessage) {
@@ -79,6 +81,7 @@ class I18nPlugin {
             }
             result = defaultValue;
           }
+
           const dep = new ConstDependency(JSON.stringify(result), expr.range);
           dep.loc = expr.loc;
           this.state.current.addDependency(dep);
