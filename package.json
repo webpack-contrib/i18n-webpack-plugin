@@ -3,15 +3,7 @@
   "version": "0.3.0",
   "author": "Tobias Koppers @sokra",
   "description": "Embed localization into your bundle",
-  "peerDependencies": {
-    "webpack": "<2 || ^2.1.0-beta || ^2.2.0-rc"
-  },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://www.opensource.org/licenses/mit-license.php"
-    }
-  ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/webpack/i18n-webpack-plugin.git"
@@ -53,6 +45,9 @@
     "pre-commit": "^1.2.2",
     "standard-version": "^4.0.0",
     "webpack-defaults": "^0.4.6"
+  },
+  "peerDependencies": {
+    "webpack": "<2 || ^2.1.0-beta || ^2.2.0-rc"
   },
   "engines": {
     "node": ">= 4.3 < 5.0.0 || >= 5.10"
