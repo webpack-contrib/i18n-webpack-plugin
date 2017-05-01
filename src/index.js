@@ -71,7 +71,7 @@ class I18nPlugin {
               error = this.state.module[__dirname] = new MissingLocalizationError(this.state.module, param, defaultValue);
               if (failOnMissing) {
                 this.state.module.errors.push(error);
-              } else {
+              } else if (!hideMessage) {
                 this.state.module.warnings.push(error);
               }
             } else if (!error.requests.includes(param)) {
