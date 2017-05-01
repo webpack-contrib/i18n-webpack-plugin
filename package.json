@@ -3,11 +3,11 @@
   "version": "0.3.0",
   "author": "Tobias Koppers @sokra",
   "description": "Embed localization into your bundle",
+  "main": "dist/cjs.js",
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/webpack/i18n-webpack-plugin.git"
-  },
   "scripts": {
     "webpack-defaults": "webpack-defaults",
     "start": "yarn run serve:dev src",
@@ -52,10 +52,14 @@
   "engines": {
     "node": ">= 4.3 < 5.0.0 || >= 5.10"
   },
-  "main": "dist/cjs.js",
-  "files": [
-    "dist"
-  ],
+  "homepage": "https://webpack.js.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webpack-contrib/i18n-webpack-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webpack-contrib/i18n-webpack-plugin/issues"
+  },
   "pre-commit": "lint-staged",
   "lint-staged": {
     "*.js": [
