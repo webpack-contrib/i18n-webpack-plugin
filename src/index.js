@@ -44,7 +44,8 @@ class I18nPlugin {
 
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, options) => { // eslint-disable-line no-unused-vars
-        parser.plugin(`call ${name}`, (expr) => {
+        // should use function here instead of arrow function due to save the Tapable's context
+        parser.plugin(`call ${name}`, function i18nPlugin(expr) {
           let param;
           let defaultValue;
           switch (expr.arguments.length) {
