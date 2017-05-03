@@ -22,11 +22,17 @@ export function processFile(entry, ...pluginOpts) {
 
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {
-      if (err) return void reject(err);
+      if (err) {
+        reject(err);
+        return;
+      }
       // stats.compilation.errors contains errors and warnings produced by plugin itself
-      if (stats.compilation.errors.length) return void reject(stats.compilation.errors[0]);
+      if (stats.compilation.errors.length) {
+        reject(stats.compilation.errors[0]);
+        return;
+      }
 
-      return void resolve(read(resolvedOutput).then((raw) => {
+      resolve(read(resolvedOutput).then((raw) => {
         return ({
           file: resolvedOutput,
           raw,
@@ -40,9 +46,12 @@ export function processFile(entry, ...pluginOpts) {
 function read(filepath) {
   return new Promise((resolve, reject) => {
     readFile(filepath, 'utf8', (err, data) => {
-      if (err) return void reject(err);
+      if (err) {
+        reject(err);
+        return;
+      }
 
-      return void resolve(data);
+      resolve(data);
     });
   });
 }
