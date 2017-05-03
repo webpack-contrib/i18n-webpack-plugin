@@ -70,8 +70,9 @@ class I18nPlugin {
           if (typeof result === 'undefined') {
             let error = this.state.module[__dirname]; // eslint-disable-line no-underscore-dangle
             if (!error) {
-              error = this.state.module[__dirname] = // eslint-disable-line no-underscore-dangle
-              new MissingLocalizationError(this.state.module, param, defaultValue);
+              error = new MissingLocalizationError(this.state.module, param, defaultValue);
+              this.state.module[__dirname] = error; // eslint-disable-line no-underscore-dangle
+
               if (failOnMissing) {
                 this.state.module.errors.push(error);
               } else if (!hideMessage) {
