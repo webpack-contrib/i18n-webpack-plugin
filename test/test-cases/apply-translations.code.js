@@ -1,2 +1,3 @@
 /* globals __ */
-exports.staticKey = __('static key');
+exports.missingKey = __('missing-key');
+exports.staticKey = __('static-key');

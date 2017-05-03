@@ -1,16 +1,23 @@
 import { processFile, requireUncache } from '../test-cases.setup';
 
 describe('apply-translations', () => {
-  let translations;
+  let translated;
 
-  beforeAll(() => processFile('apply-translations.code.js')
-    .then(({ file }) => {
-      translations = requireUncache(file);
-    }));
+  beforeAll(() => {
+    const translations = {
+      'static-key': 'translated static key',
+    };
+
+    return processFile('apply-translations.code.js', translations)
+      .then(({ file }) => {
+        translated = requireUncache(file);
+      });
+  });
 
   it('should return translated keys', () => {
-    expect(translations).toEqual({
-      staticKey: 'static key',
+    expect(translated).toEqual({
+      missingKey: 'missing-key',
+      staticKey: 'translated static key',
     });
   });
 });

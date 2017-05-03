@@ -34,5 +34,6 @@ class MissingLocalizationError {
 }
 
 export default MissingLocalizationError;
-
-MissingLocalizationError.prototype = Object.create(Error.prototype);
+// actually it overwrites the existing methods in MissingLocalizationError.prototype
+// todo: make a proper prototype chain
+// MissingLocalizationError.prototype = Object.create(Error.prototype);
