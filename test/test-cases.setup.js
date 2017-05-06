@@ -1,9 +1,8 @@
 import { basename, dirname, join } from 'path';
-import { readFile } from 'fs';
 import webpack from 'webpack';
 import I18nPlugin from '../src';
 
-export function processFile(entry, ...pluginOpts) {
+export default function processFile(entry, ...pluginOpts) {
   const resolvedEntry = join(__dirname, 'test-cases', entry);
   const resolvedOutput = join(dirname(resolvedEntry), `${basename(resolvedEntry, '.code.js')}.tmp.js`);
 
@@ -32,31 +31,10 @@ export function processFile(entry, ...pluginOpts) {
         return;
       }
 
-      resolve(read(resolvedOutput).then((raw) => {
-        return ({
-          file: resolvedOutput,
-          raw,
-          stats,
-        });
-      }));
+      resolve({
+        file: resolvedOutput,
+        stats,
+      });
     });
   });
-}
-
-function read(filepath) {
-  return new Promise((resolve, reject) => {
-    readFile(filepath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      resolve(data);
-    });
-  });
-}
-
-export function requireUncache(modulePath) {
-  delete require.cache[require.resolve(modulePath)];
-  return require(modulePath); // eslint-disable-line import/no-dynamic-require, global-require
 }

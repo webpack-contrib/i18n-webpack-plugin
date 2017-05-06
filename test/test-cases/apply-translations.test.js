@@ -1,4 +1,4 @@
-import { processFile, requireUncache } from '../test-cases.setup';
+import processFile from '../test-cases.setup';
 
 describe('apply-translations', () => {
   let translated;
@@ -10,7 +10,7 @@ describe('apply-translations', () => {
 
     return processFile('apply-translations.code.js', translations)
       .then(({ file }) => {
-        translated = requireUncache(file);
+        translated = require.requireActual(file);
       });
   });
 

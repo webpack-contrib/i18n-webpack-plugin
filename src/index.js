@@ -68,10 +68,10 @@ class I18nPlugin {
           let result = localization ? localization(param) : defaultValue;
 
           if (typeof result === 'undefined') {
-            let error = this.state.module[__dirname]; // eslint-disable-line no-underscore-dangle
+            let error = this.state.module[__dirname];
             if (!error) {
               error = new MissingLocalizationError(this.state.module, param, defaultValue);
-              this.state.module[__dirname] = error; // eslint-disable-line no-underscore-dangle
+              this.state.module[__dirname] = error;
 
               if (failOnMissing) {
                 this.state.module.errors.push(error);

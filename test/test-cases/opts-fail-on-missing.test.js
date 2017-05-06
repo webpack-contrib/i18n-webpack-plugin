@@ -1,5 +1,5 @@
-import { processFile } from '../test-cases.setup';
 import MissingLocalizationError from '../../src/MissingLocalizationError';
+import processFile from '../test-cases.setup';
 
 describe('opts-fail-on-missing', () => {
   it('should return translated keys', () => {
