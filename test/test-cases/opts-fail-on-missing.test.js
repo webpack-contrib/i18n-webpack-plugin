@@ -1,7 +1,7 @@
 import MissingLocalizationError from '../../src/MissingLocalizationError';
 import processFile from '../test-cases.setup';
 
-describe('opts-fail-on-missing', () => {
+describe('options.failOnMissing', () => {
   it('should return translated keys', () => {
     const translations = {};
     const options = {
