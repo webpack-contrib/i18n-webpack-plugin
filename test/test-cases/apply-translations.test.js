@@ -15,10 +15,6 @@ describe('apply-translations', () => {
   });
 
   it('should return translated keys', () => {
-    expect(translated).toEqual({
-      defaults: 'default value',
-      missingKey: 'missing-key2',
-      staticKey: 'translated static key',
-    });
+    expect(translated).toMatchSnapshot();
   });
 });

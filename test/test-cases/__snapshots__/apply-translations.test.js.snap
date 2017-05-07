@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`apply-translations should return translated keys 1`] = `
+Object {
+  "defaults": "default value",
+  "missingKey": "missing-key2",
+  "staticKey": "translated static key",
+}
+`;
