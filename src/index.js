@@ -14,7 +14,7 @@ import makeLocalizeFunction from './MakeLocalizeFunction';
  * @constructor
  */
 class I18nPlugin {
-  constructor(localization, options) {
+  constructor(localization, options, failOnMissing) {
     // Backward-compatiblility
     if (typeof options === 'string') {
       options = {
@@ -22,8 +22,8 @@ class I18nPlugin {
       };
     }
 
-    if (arguments[2]) {
-      options.failOnMissing = arguments[2];
+    if (typeof failOnMissing !== 'undefined') {
+      options.failOnMissing = failOnMissing;
     }
 
     this.options = options || {};
