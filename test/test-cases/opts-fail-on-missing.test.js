@@ -8,9 +8,10 @@ describe('opts-fail-on-missing', () => {
       failOnMissing: true,
     };
 
-    expect.assertions(2);
+    expect.assertions(3);
     return processFile('opts-fail-on-missing.code.js', translations, options)
       .catch((er) => {
+        expect(er).toBeInstanceOf(Error);
         expect(er).toBeInstanceOf(MissingLocalizationError);
         expect(er.message).toBe('Missing localization: missing-key');
       });
