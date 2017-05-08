@@ -10,10 +10,10 @@ describe('options.failOnMissing', () => {
 
     expect.assertions(3);
     return processFile('opts-fail-on-missing.code.js', translations, options)
-      .catch((er) => {
-        expect(er).toBeInstanceOf(Error);
-        expect(er).toBeInstanceOf(MissingLocalizationError);
-        expect(er.message).toBe('Missing localization: missing-key');
+      .catch((err) => {
+        expect(err).toBeInstanceOf(Error);
+        expect(err).toBeInstanceOf(MissingLocalizationError);
+        expect(err.message).toBe('Missing localization: missing-key');
       });
   });
 });
