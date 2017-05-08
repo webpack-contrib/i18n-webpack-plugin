@@ -3,7 +3,7 @@ import webpack from 'webpack';
 import I18nPlugin from '../src';
 
 export default function processFile(entry, ...pluginOpts) {
-  const resolvedEntry = join(__dirname, 'test-cases', entry);
+  const resolvedEntry = join(__dirname, 'cases', entry);
   const resolvedOutput = join(dirname(resolvedEntry), `${basename(resolvedEntry, '.code.js')}.tmp.js`);
 
   const compiler = webpack({

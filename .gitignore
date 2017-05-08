@@ -15,4 +15,4 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
-/test/test-cases/*.tmp.js
+/test/cases/*.tmp.js

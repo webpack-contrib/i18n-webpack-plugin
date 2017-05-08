@@ -1,4 +1,4 @@
-import processFile from '../test-cases.setup';
+import processFile from '../cases.setup';
 
 describe('apply-translations', () => {
   let translated;
