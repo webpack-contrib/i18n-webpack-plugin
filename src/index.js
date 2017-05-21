@@ -14,7 +14,7 @@ import makeLocalizeFunction from './MakeLocalizeFunction';
  * @constructor
  */
 class I18nPlugin {
-  constructor(localization, options) {
+  constructor(localization, options, failOnMissing) {
     // Backward-compatiblility
     if (typeof options === 'string') {
       options = {
@@ -22,8 +22,8 @@ class I18nPlugin {
       };
     }
 
-    if (arguments[2]) {
-      options.failOnMissing = arguments[2];
+    if (typeof failOnMissing !== 'undefined') {
+      options.failOnMissing = failOnMissing;
     }
 
     this.options = options || {};
@@ -44,7 +44,8 @@ class I18nPlugin {
 
     compiler.plugin('compilation', (compilation, data) => {
       data.normalModuleFactory.plugin('parser', (parser, options) => { // eslint-disable-line no-unused-vars
-        parser.plugin(`call ${name}`, (expr) => {
+        // should use function here instead of arrow function due to save the Tapable's context
+        parser.plugin(`call ${name}`, function i18nPlugin(expr) {
           let param;
           let defaultValue;
           switch (expr.arguments.length) {
@@ -67,10 +68,11 @@ class I18nPlugin {
           let result = localization ? localization(param) : defaultValue;
 
           if (typeof result === 'undefined') {
-            let error = this.state.module[__dirname]; // eslint-disable-line no-underscore-dangle
+            let error = this.state.module[__dirname];
             if (!error) {
-              error = this.state.module[__dirname] = // eslint-disable-line no-underscore-dangle
-              new MissingLocalizationError(this.state.module, param, defaultValue);
+              error = new MissingLocalizationError(this.state.module, param, defaultValue);
+              this.state.module[__dirname] = error;
+
               if (failOnMissing) {
                 this.state.module.errors.push(error);
               } else if (!hideMessage) {

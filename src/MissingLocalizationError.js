@@ -3,15 +3,18 @@
   Author Tobias Koppers @sokra
 */
 
-class MissingLocalizationError {
+class MissingLocalizationError extends Error {
   constructor(module, name, value) {
-    Error.call(this);
+    super();
+
     Error.captureStackTrace(this, MissingLocalizationError);
     this.name = 'MissingLocalizationError';
     this.requests = [
       { name, value },
     ];
     this.module = module;
+    // small workaround for babel
+    Object.setPrototypeOf(this, MissingLocalizationError.prototype);
     this._buildMessage();
   }
 
@@ -34,5 +37,3 @@ class MissingLocalizationError {
 }
 
 export default MissingLocalizationError;
-
-MissingLocalizationError.prototype = Object.create(Error.prototype);
