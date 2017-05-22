@@ -35,7 +35,7 @@ before_test:
 #     If ($env:webpack_version) {
 #       npm install webpack@^$env:webpack_version
 #     }
-- ps: npm install webpack@^$env:webpack_version
+- cmd: npm install webpack@^$env:webpack_version
 # - cmd: npm install webpack@^%webpack_version%
 
 test_script:
