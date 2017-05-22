@@ -31,7 +31,7 @@ matrix:
   fast_finish: true
 
 before_test:
-- ps: >-
+- cmd: >-
     If ($env:webpack_version) {
       npm install webpack@^$env:webpack_version
     }
