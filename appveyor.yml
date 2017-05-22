@@ -31,10 +31,16 @@ matrix:
   fast_finish: true
 
 before_test:
-- cmd: >-
-    If ($env:webpack_version) {
+# - cmd: >-
+#     If ($env:webpack_version) {
+#       npm install webpack@^$env:webpack_version
+#     }
+
+- cmd:
+  - |-
+    if [ "$env:webpack_version" ]; then
       npm install webpack@^$env:webpack_version
-    }
+    fi
 
 test_script:
   - node --version
