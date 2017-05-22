@@ -31,11 +31,10 @@ matrix:
   fast_finish: true
 
 before_test:
-  - ps: |
-      if ($webpack_version)
-      {
-        npm install webpack@^$webpack_version
-      }
+- ps: >-
+    If ($env:webpack_version) {
+      npm install webpack@^$env:webpack_version
+    }
 
 test_script:
   - node --version
