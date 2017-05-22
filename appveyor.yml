@@ -1,0 +1,39 @@
+# appveyor file
+# http://www.appveyor.com/docs/appveyor-yml
+
+init:
+  - git config --global core.autocrlf input
+
+# what combinations to test
+environment:
+  matrix:
+    - nodejs_version: 7
+      webpack_version: 2.2.0
+      job_part: test
+    - nodejs_version: 6
+      webpack_version: 2.2.0
+      job_part: test
+    - nodejs_version: 4
+      webpack_version: 2.2.0
+      job_part: test
+
+install:
+  - ps: Install-Product node $env:nodejs_version x64
+  - npm install
+
+build: off
+
+matrix:
+  fast_finish: true
+
+before_test:
+  - ps: |
+      if ($webpack_version)
+      {
+        npm install webpack@^$webpack_version
+      }
+
+test_script:
+  - node --version
+  - npm --version
+  - cmd: npm run appveyor:%job_part%
