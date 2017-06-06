@@ -9,9 +9,9 @@
   ],
   "license": "MIT",
   "scripts": {
-    "webpack-defaults": "webpack-defaults",
     "start": "npm run build -- -w",
     "build": "cross-env NODE_ENV=production babel src -d dist --ignore 'src/**/*.test.js'",
+    "clean": "del-cli dist",
     "clean:dist": "del-cli dist",
     "lint": "eslint --cache src test",
     "lint-staged": "lint-staged",
@@ -26,7 +26,7 @@
     "travis:coverage": "npm run test:coverage",
     "travis:lint": "npm run lint && npm run security",
     "travis:test": "npm run test",
-    "clean": "del-cli dist"
+    "webpack-defaults": "webpack-defaults"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
