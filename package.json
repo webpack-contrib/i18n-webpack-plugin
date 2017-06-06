@@ -1,6 +1,6 @@
 {
   "name": "i18n-webpack-plugin",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "author": "Tobias Koppers @sokra",
   "description": "Embed localization into your bundle",
   "main": "dist/cjs.js",
