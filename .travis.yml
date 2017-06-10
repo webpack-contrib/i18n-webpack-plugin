@@ -28,7 +28,8 @@ jobs:
       env: WEBPACK_VERSION=latest JOB_PART=coverage
       script: npm run travis:$JOB_PART
       after_success: 'bash <(curl -s https://codecov.io/bash)'
-    - stage: Webpack@beta
+    - stage: Webpack Canary
+      before_script: npm i --no-save git://github.com/webpack/webpack.git#master
       script: npm run travis:$JOB_PART
       node_js: 8
       env: WEBPACK_VERSION=beta JOB_PART=test
