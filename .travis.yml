@@ -9,7 +9,8 @@ jobs:
   allow_failures:
     - env: WEBPACK_VERSION=canary
   include:
-      - &test-latest
+    - |-
+      &test-latest
         stage: Webpack @latest
         nodejs: 6
         env: WEBPACK_VERSION=latest JOB_PART=test
@@ -40,7 +41,7 @@ before_install:
 before_script:
   - |-
     if [ "$WEBPACK_VERSION" ]; then
-      npm i --no-save webpack@^$WEBPACK_VERSION
+      npm i --no-save webpack@$WEBPACK_VERSION
     fi
 script:
   - 'npm run travis:$JOB_PART'
