@@ -4,9 +4,7 @@ language: node_js
 branches:
   only:
     - master
-node_js:
-  - 6
-  - 4.3
+
 # env:
 #   matrix:
 #     - WEBPACK_VERSION=latest
@@ -37,17 +35,23 @@ jobs:
   allow_failures:
     - env: WEBPACK_VERSION=beta
   include:
-    - stage: Test
+    - &test-latest
+      stage: Test
+      nodejs: 6
       script: npm run travis:$JOB_PART
       env: WEBPACK_VERSION=latest JOB_PART=test
-    - stage: Static Analysis
+    - <<: *test-latest
+      nodejs: 4.3
+      env: WEBPACK_VERSION=latest JOB_PART=test
       script: npm run travis:$JOB_PART
+    - <<: *test-latest
       node_js: 8
-      env: WEBPACK_VERSION=beta JOB_PART=lint
-    - stage: Coverage
+      env: WEBPACK_VERSION=latest JOB_PART=lint
       script: npm run travis:$JOB_PART
+    - <<: *test-latest
       node_js: 8
       env: WEBPACK_VERSION=latest JOB_PART=coverage
+      script: npm run travis:$JOB_PART
       after_success: 'bash <(curl -s https://codecov.io/bash)'
     - stage: Webpack Canary
       script: npm run travis:$JOB_PART
