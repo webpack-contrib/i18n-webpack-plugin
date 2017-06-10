@@ -9,7 +9,6 @@ jobs:
   allow_failures:
     - env: WEBPACK_VERSION=canary
   include:
-    - |-
       - &test-latest
         stage: Webpack @latest
         nodejs: 6
