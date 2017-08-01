@@ -1,36 +1,71 @@
 import { parse } from 'acorn';
-import { isPluralExpression, serializeExpression } from '../src/ast';
-
-describe('isPluralExpression', () => {
-  it('should return `true` is case specified identifier is presented', () => {
-    const ast = parse('count + \' nights\'');
-    expect(isPluralExpression(ast.body[0], 'count')).toBe(true);
-  });
-
-  it('should return `false` is case specified identifier is not presented', () => {
-    const ast = parse('count + \' nights\'');
-    expect(isPluralExpression(ast.body[0], 'amount')).toBe(false);
-  });
-});
+import { serializeExpression } from '../src/ast';
 
 describe('serializeExpression', () => {
-  it('should serialize binary expressions properly', () => {
-    const ast = parse('count + \' nights\'');
-    expect(serializeExpression(ast.body[0])).toBe('\'{count} nights\'');
+  describe('identifiers', () => {
+    it('should return all found identifiers', () => {
+      const ast = parse(`'AA' + bb + 'CC' + dd + 'EE' + bb`); // eslint-disable-line quotes
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.identifiers).toEqual({
+        bb: '{bb}',
+        dd: '{dd}',
+      });
+    });
   });
 
-  it('should serialize nested binary expressions properly', () => {
-    const ast = parse('\'foo \' + bar + \' baz\'');
-    expect(serializeExpression(ast.body[0])).toBe('\'foo {bar} baz\'');
+  describe('plural', () => {
+    it('should return `true` is case pluralIdentName was found', () => {
+      const ast = parse(`foo + 'bar'`); // eslint-disable-line quotes
+      const expr = serializeExpression(ast.body[0], 'foo');
+
+      expect(expr.plural).toBe(true);
+    });
+
+    it('should return `false` is case pluralIdentName was not found', () => {
+      const ast = parse(`foo + 'bar'`); // eslint-disable-line quotes
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.plural).toBe(false);
+    });
   });
 
-  it('should serialize template literals properly', () => {
-    const ast = parse('`${count} nights`'); // eslint-disable-line no-template-curly-in-string
-    expect(serializeExpression(ast.body[0])).toBe('\'{count} nights\'');
+  describe('string', () => {
+    it('should serialize binary expressions properly', () => {
+      const ast = parse('count + \' nights\'');
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.string).toBe('{count} nights');
+    });
+
+    it('should serialize nested binary expressions properly', () => {
+      const ast = parse('\'foo \' + bar + \' baz\'');
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.string).toBe('foo {bar} baz');
+    });
+
+    it('should serialize template literals properly', () => {
+      const ast = parse('`${count} nights`'); // eslint-disable-line no-template-curly-in-string
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.string).toBe('{count} nights');
+    });
+
+    it('should serialize nested template literals properly', () => {
+      const ast = parse('`${ `foo ${bar}` } baz`'); // eslint-disable-line no-template-curly-in-string
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.string).toBe('foo {bar} baz');
+    });
   });
 
-  it('should serialize nested template literals properly', () => {
-    const ast = parse('`${ `foo ${bar}` } baz`'); // eslint-disable-line no-template-curly-in-string
-    expect(serializeExpression(ast.body[0])).toBe('\'foo {bar} baz\'');
+  describe('supported', () => {
+    it('should set supported to `false` for call expressions', () => {
+      const ast = parse('foo(bar)');
+      const expr = serializeExpression(ast.body[0]);
+
+      expect(expr.supported).toBe(false);
+    });
   });
 });

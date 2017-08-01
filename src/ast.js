@@ -1,28 +1,22 @@
-import { findNodeAt } from 'acorn/dist/walk';
-
 export const base = {
   BinaryExpression(node, state, c) {
-    if (node.operator !== '+') {
-      c(node, `Unsupported BinaryExpression with operator ${node.operator}`, 'Unknown');
+    if (node.operator === '+') {
+      return c(node.left, state) + c(node.right, state);
     }
 
-    const value = c(node.left, 'BinaryExpression') + c(node.right, 'BinaryExpression');
-
-    if (state === 'BinaryExpression') {
-      return value;
-    }
-
-    return `'${value}'`;
+    return c(node, state, 'Unsupported');
   },
   ExpressionStatement(node, state, c) {
     return c(node.expression, state);
   },
   Identifier(node, state) {
-    if (state === 'BinaryExpression' || state === 'TemplateLiteral') {
-      return `{${node.name}}`;
-    }
+    const name = node.name;
+    const param = `{${node.name}}`;
 
-    return node.name;
+    if (name === state.pluralIdentName) state.plural = true;
+    state.identifiers[name] = param;
+    state.params = true;
+    return param;
   },
   Literal(node) {
     return node.value;
@@ -31,42 +25,52 @@ export const base = {
     return node.value.raw;
   },
   TemplateLiteral(node, state, c) {
-    const value = node.quasis.map((templateElement, pos) => {
+    return node.quasis.map((templateElement, pos) => {
       if (templateElement.tail) {
-        return c(templateElement, null);
+        return c(templateElement, state);
       }
 
-      return c(templateElement, null) + c(node.expressions[pos], 'TemplateLiteral');
+      return c(templateElement, state) + c(node.expressions[pos], state);
     }).join('');
-
-    if (state === 'BinaryExpression' || state === 'TemplateLiteral') {
-      return value;
-    }
-
-    return `'${value}'`;
   },
-  Unknown(node, state) {
-    const error = new Error(state || `Unknown type ${node.type}`);
-    error.loc = { start: node.start, end: node.end };
-    throw error;
+  Unsupported(node, state) {
+    state.supported = false;
   },
 };
 
-export function isPluralExpression(expr, pluralIdentifierName) {
-  const result = findNodeAt(expr, null, null, (nodeType, node) =>
-    nodeType === 'Identifier' && node.name === pluralIdentifierName);
-
-  return Boolean(result);
-}
-
-export function serialize(node, state, visitor, override) {
+/**
+ *
+ * @param  {object} expr
+ * @param  {object} state
+ * @param  {object} visitor
+ * @param  {string} override
+ * @return {mixed}
+ */
+export function serialize(expr, state, visitor, override) {
   function c(node, st, override) {
-    return (visitor[override || node.type] || visitor.Unknown)(node, st, c);
+    return (visitor[override || node.type] || visitor.Unsupported)(node, st, c);
   }
 
-  return c(node, state, override);
+  return c(expr, state, override);
 }
 
-export function serializeExpression(expr) {
-  return serialize(expr, null, base);
+/**
+ *
+ * @param  {object} expr            Fragment of AST
+ * @param  {string} pluralIdentName
+ * @return {object}
+ */
+export function serializeExpression(expr, pluralIdentName) {
+  const state = {
+    identifiers: {},
+    params: false,
+    plural: false,
+    pluralIdentName,
+    string: '',
+    supported: true,
+  };
+
+  const string = serialize(expr, state, base);
+  if (state.supported) state.string = string;
+  return state;
 }
