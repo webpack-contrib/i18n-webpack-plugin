@@ -6,9 +6,14 @@ describe('apply-translations', () => {
   beforeAll(() => {
     const translations = {
       'static-key': 'translated static key',
+      '{count} nights': [
+        '{count} ночь',
+        '{count} ночи',
+        '{count} ночей',
+      ],
     };
 
-    return processFile('apply-translations.code.js', translations)
+    return processFile('apply-translations.code.js', translations, { pluralRuleNumber: 7 })
       .then(({ file }) => {
         translated = require.requireActual(file);
       });

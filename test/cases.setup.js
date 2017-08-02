@@ -25,6 +25,7 @@ export default function processFile(entry, ...pluginOpts) {
         reject(err);
         return;
       }
+
       // stats.compilation.errors contains errors and warnings produced by plugin itself
       if (stats.compilation.errors.length) {
         reject(stats.compilation.errors[0]);
