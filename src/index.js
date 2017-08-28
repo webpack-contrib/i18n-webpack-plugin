@@ -110,7 +110,13 @@ class I18nPlugin {
               .map(identifier => `${JSON.stringify(paramExpr.identifiers[identifier])}: ${identifier}`).join(', ');
 
             const forms = paramExpr.plural ? buildForms(result, pluralRuleNumber) : result;
-            const replacement = paramExpr.plural ? `${name}(${JSON.stringify(forms)}, {${pairs}}, ${pluralIdentName})` : `${name}(${JSON.stringify(forms)}, {${pairs}})`;
+
+            let replacement = null;
+            if (paramExpr.plural) {
+              replacement = `${name}(${JSON.stringify(forms)}, {${pairs}}, ${pluralIdentName})`;
+            } else {
+              replacement = `${name}(${JSON.stringify(forms)}, {${pairs}})`;
+            }
 
             const dep = new ConstDependency(replacement, expr.range);
             dep.loc = expr.loc;
