@@ -83,8 +83,11 @@ class I18nPlugin {
             }
             result = defaultValue;
           }
+          
+          result = JSON.stringify(result);
+          result = result.replace(/^"`(.*)`"$/, "`$1`");
 
-          const dep = new ConstDependency(JSON.stringify(result), expr.range);
+          const dep = new ConstDependency(result, expr.range);
           dep.loc = expr.loc;
           this.state.current.addDependency(dep);
           return true;
