@@ -6,6 +6,7 @@ describe('apply-translations', () => {
   beforeAll(() => {
     const translations = {
       'static-key': 'translated static key',
+      'template-string': '`Your dynamic value is ${variableForTemplateString}.`', // eslint-disable-line no-template-curly-in-string
     };
 
     return processFile('apply-translations.code.js', translations)
