@@ -1,3 +1,6 @@
+/* eslint-disable
+  no-template-curly-in-string,
+*/
 import processFile from '../cases.setup';
 
 describe('apply-translations', () => {
@@ -6,7 +9,7 @@ describe('apply-translations', () => {
   beforeAll(() => {
     const translations = {
       'static-key': 'translated static key',
-      'template-string': '`Your dynamic value is ${variableForTemplateString}.`', // eslint-disable-line no-template-curly-in-string
+      'template-string': '`Your dynamic value is ${variableForTemplateString}.`',
     };
 
     return processFile('apply-translations.code.js', translations)
