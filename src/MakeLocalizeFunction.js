@@ -1,10 +1,10 @@
 /**
  * Convert the localization object into a function in case we need to support nested keys.
  *
- * @param {object} localization the language object,
- * @param {boolean} nested
+ * @param {Object} localization the language object,
+ * @param {Boolean} nested
  *
- * @returns {function}
+ * @returns {Function}
  */
 function makeLocalizeFunction(localization, nested) {
   return function localizeFunction(key) {
@@ -20,19 +20,18 @@ function makeLocalizeFunction(localization, nested) {
  * Lang: {"errors": {"connectionError": "There was an error connecting."}}
  * New Code: "There was an error connecting."
  *
- * @param {object} localization
- * @param {string} nestedKey The original key
+ * @param {Object} localization
+ * @param {String} nestedKey The original key
  *
  * @returns {*}
  */
 function byString(localization, nestedKey) {
-  // strip a leading dot
-  const stringKey = nestedKey.replace(/^\./, '');
-  const keysArray = stringKey.split('.');
+  // remove a leading dot and split by dot
+  const keys = nestedKey.replace(/^\./, '').split('.');
 
   // loop through the keys to find the nested value
-  for (let i = 0, length = keysArray.length; i < length; ++i) {
-    const key = keysArray[i];
+  for (let i = 0, length = keys.length; i < length; ++i) {
+    const key = keys[i];
 
     if (!(key in localization)) { return; }
 
