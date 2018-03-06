@@ -36,47 +36,48 @@ class I18nPlugin {
   apply(compiler) {
     const { localization, failOnMissing, hideMessage } = this; // eslint-disable-line no-unused-vars
     const name = this.functionName;
+    const plugin = { name: 'I18nPlugin' };
 
-    compiler.plugin('compilation', (compilation, params) => { // eslint-disable-line no-unused-vars
+    compiler.hooks.compilation.tap(plugin, (compilation, params) => { // eslint-disable-line no-unused-vars
       compilation.dependencyFactories.set(ConstDependency, new NullFactory());
       compilation.dependencyTemplates.set(ConstDependency, new ConstDependency.Template());
     });
 
-    compiler.plugin('compilation', (compilation, data) => {
-      data.normalModuleFactory.plugin('parser', (parser, options) => { // eslint-disable-line no-unused-vars
-        // should use function here instead of arrow function due to save the Tapable's context
-        parser.plugin(`call ${name}`, function i18nPlugin(expr) {
+    compiler.hooks.compilation.tap(plugin, (compilation, data) => {
+      const parserHook = data.normalModuleFactory.hooks.parser;
+      const parserHandler = (parser, options) => { // eslint-disable-line no-unused-vars
+        parser.hooks.call.for(name).tap(plugin, (expr) => {
           let param;
           let defaultValue;
           switch (expr.arguments.length) {
             case 2:
-              param = this.evaluateExpression(expr.arguments[1]);
-              if (!param.isString()) return;
+              param = parser.evaluateExpression(expr.arguments[1]);
+              if (!param.isString()) return false;
               param = param.string;
-              defaultValue = this.evaluateExpression(expr.arguments[0]);
-              if (!defaultValue.isString()) return;
+              defaultValue = parser.evaluateExpression(expr.arguments[0]);
+              if (!defaultValue.isString()) return false;
               defaultValue = defaultValue.string;
               break;
             case 1:
-              param = this.evaluateExpression(expr.arguments[0]);
-              if (!param.isString()) return;
+              param = parser.evaluateExpression(expr.arguments[0]);
+              if (!param.isString()) return false;
               defaultValue = param = param.string;
               break;
             default:
-              return;
+              return false;
           }
           let result = localization ? localization(param) : defaultValue;
 
           if (typeof result === 'undefined') {
-            let error = this.state.module[__dirname];
+            let error = parser.state.module[__dirname];
             if (!error) {
-              error = new MissingLocalizationError(this.state.module, param, defaultValue);
-              this.state.module[__dirname] = error;
+              error = new MissingLocalizationError(parser.state.module, param, defaultValue);
+              parser.state.module[__dirname] = error;
 
               if (failOnMissing) {
-                this.state.module.errors.push(error);
+                parser.state.module.errors.push(error);
               } else if (!hideMessage) {
-                this.state.module.warnings.push(error);
+                parser.state.module.warnings.push(error);
               }
             } else if (!error.requests.includes(param)) {
               error.add(param, defaultValue);
@@ -86,10 +87,14 @@ class I18nPlugin {
 
           const dep = new ConstDependency(JSON.stringify(result), expr.range);
           dep.loc = expr.loc;
-          this.state.current.addDependency(dep);
+          parser.state.current.addDependency(dep);
           return true;
         });
-      });
+      };
+
+      parserHook.for('javascript/auto').tap(plugin, parserHandler);
+      parserHook.for('javascript/dynamic').tap(plugin, parserHandler);
+      parserHook.for('javascript/esm').tap(plugin, parserHandler);
     });
   }
 }
