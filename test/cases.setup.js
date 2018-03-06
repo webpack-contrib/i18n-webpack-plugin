@@ -7,11 +7,11 @@ export default function processFile(entry, ...pluginOpts) {
   const resolvedOutput = join(dirname(resolvedEntry), `${basename(resolvedEntry, '.code.js')}.tmp.js`);
 
   const compiler = webpack({
+    mode: 'none',
     entry: resolvedEntry,
     output: {
       filename: basename(resolvedOutput),
       path: dirname(resolvedOutput),
-
       libraryTarget: 'commonjs2',
     },
     plugins: [
