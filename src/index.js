@@ -31,10 +31,11 @@ class I18nPlugin {
     this.functionName = this.options.functionName || '__';
     this.failOnMissing = !!this.options.failOnMissing;
     this.hideMessage = this.options.hideMessage || false;
+    this.missingLocalizationCallback = this.options.missingLocalizationCallback || (() => 0);
   }
 
   apply(compiler) {
-    const { localization, failOnMissing, hideMessage } = this; // eslint-disable-line no-unused-vars
+    const { localization, failOnMissing, hideMessage, missingLocalizationCallback } = this; // eslint-disable-line no-unused-vars
     const name = this.functionName;
 
     compiler.plugin('compilation', (compilation, params) => { // eslint-disable-line no-unused-vars
@@ -68,6 +69,7 @@ class I18nPlugin {
           let result = localization ? localization(param) : defaultValue;
 
           if (typeof result === 'undefined') {
+            missingLocalizationCallback(param, this.state.module);
             let error = this.state.module[__dirname];
             if (!error) {
               error = new MissingLocalizationError(this.state.module, param, defaultValue);
